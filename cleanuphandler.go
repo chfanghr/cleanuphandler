@@ -28,6 +28,12 @@ func Wait() { <-done }
 
 func AddCleanupHandlers(newHandlers ...CleanupHandler) { handlers = append(handlers, newHandlers...) }
 
+func SetLogger(l *log.Logger) {
+	if l != nil {
+		logger = l
+	}
+}
+
 func init() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go worker(ctx)
@@ -35,7 +41,7 @@ func init() {
 }
 
 func worker(ctx context.Context) {
-	var sigChan chan os.Signal
+	var sigChan = make(chan os.Signal)
 	signal.Ignore(sigs...)
 	signal.Notify(sigChan, sigs...)
 
@@ -65,7 +71,8 @@ func executeHandlers() {
 		handler(logger)
 	}
 	for _, v := range handlers {
-		go work(v)
+		work(v)
 	}
 	wg.Wait()
+	done <- struct{}{}
 }
