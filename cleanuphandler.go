@@ -26,7 +26,11 @@ func HandleSignals(signal ...os.Signal) { sigs = signal; reloadWorker() }
 
 func Wait() { <-done }
 
-func AddCleanupHandlers(newHandlers ...CleanupHandler) { handlers = append(handlers, newHandlers...) }
+func AddCleanupHandlers(newHandlers ...CleanupHandler) {
+	if len(newHandlers) != 0 {
+		handlers = append(handlers, newHandlers...)
+	}
+}
 
 func SetLogger(l *log.Logger) {
 	if l != nil {
@@ -64,14 +68,8 @@ func reloadWorker() {
 }
 
 func executeHandlers() {
-	wg := new(sync.WaitGroup)
 	for _, v := range handlers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			v(logger)
-		}()
+		v(logger)
 	}
-	wg.Wait()
 	done <- struct{}{}
 }
