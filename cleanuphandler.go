@@ -65,13 +65,12 @@ func reloadWorker() {
 
 func executeHandlers() {
 	wg := new(sync.WaitGroup)
-	work := func(handler CleanupHandler) {
-		wg.Add(1)
-		defer wg.Done()
-		handler(logger)
-	}
 	for _, v := range handlers {
-		work(v)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			v(logger)
+		}()
 	}
 	wg.Wait()
 	done <- struct{}{}
